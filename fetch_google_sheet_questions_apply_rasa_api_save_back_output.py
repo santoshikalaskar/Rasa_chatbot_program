@@ -5,6 +5,7 @@ import json
 import logging
 import pandas as pd
 from google_sheet_handler import Google_sheet_handler
+import logger_hander
 
 class Rasa_Test:
 
@@ -31,7 +32,7 @@ class Rasa_Test:
                 Name_list.append(name)
                 Answer_list.append(answer)
                 Intent_list.append("")
-        logging.info("Data fetched from existing sheet Successfully..!")
+        logger.info("Data fetched from existing sheet Successfully..!")
         return Question_list, Email_id_list, Name_list, Intent_list, Answer_list
 
 
@@ -44,11 +45,11 @@ class Rasa_Test:
                 r = requests.post(self.url, data=json.dumps(payload))
                 response_return = r.json()
                 Response_list.append(response_return[0].get("text"))
-            logging.info(" Got Response_list from Rasa API ")
+            logger.info(" Got Response_list from Rasa API ")
             return Response_list
         except Exception as e:
             excepName = type(e).__name__
-            logging.error(" Rasa API Issue : " + excepName)
+            logger.error(" Rasa API Issue : " + excepName)
             return excepName
 
     # Save & Append output into Google sheet
@@ -56,11 +57,11 @@ class Rasa_Test:
         try:
             for row in df_list:
                 worksheet.append_row(row)
-            logging.info("Output response of Rasa has been appended Successfully..!")
+            logger.info("Output response of Rasa has been appended Successfully..!")
             return True
         except Exception as e:
             excepName = type(e).__name__
-            logging.error(" Updating google sheet " + excepName)
+            logger.error(" Updating google sheet " + excepName)
             return excepName
 
     def find_yesterday_date(self):
@@ -75,6 +76,8 @@ class Rasa_Test:
 if __name__ == "__main__":
     rasa_obj = Rasa_Test()
     sheet_handler = Google_sheet_handler()
+    logger = logger_hander.set_logger()
+
     sheet = sheet_handler.call_sheet("Chatbot_Daily_Report","Chatbot_Daily_Report")
     if sheet != 'WorksheetNotFound':
         yesterday = rasa_obj.find_yesterday_date()
@@ -83,7 +86,7 @@ if __name__ == "__main__":
         if flag:
             question_list, email_id, Name, intent_list, answer_list = rasa_obj.fetch_data(sheet,yesterday)
             if len(question_list) == 0:
-                logging.info("No interaction happened in yesterday.")
+                logger.info("No interaction happened in yesterday.")
             else:
                 Response_list = rasa_obj.call_rasa_api(question_list)
                 if Response_list != "ConnectionError":
@@ -95,6 +98,6 @@ if __name__ == "__main__":
                     if created_sheet != 'WorksheetNotFound':
                         output = rasa_obj.save_output_into_sheet(created_sheet, df_list_value)
                         if output == True:
-                            logging.info(" Sheet Updated Successfully...!!!")
+                            logger.info(" Sheet Updated Successfully...!!!")
                         else:
-                            logging.error(" Something went wrong while Updating sheet ")
+                            logger.error(" Something went wrong while Updating sheet ")

@@ -2,6 +2,7 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import gspread_dataframe as gd
 import logging
+import logger_hander
 
 class Google_sheet_handler:
 
@@ -16,7 +17,7 @@ class Google_sheet_handler:
             return self.sheet
         except Exception as e:
             excepName = type(e).__name__
-            logging.error(excepName)
+            logger.error(excepName)
             return excepName
 
     def find_cell(self, sheet, List_cell_name):
@@ -27,7 +28,8 @@ class Google_sheet_handler:
             return flag
         except gspread.exceptions.CellNotFound:
             flag = False
-            logging.error("CellNotFound Exception")
+            logger.error("CellNotFound Exception")
             return flag
 
 
+logger = logger_hander.set_logger()
