@@ -2,6 +2,11 @@ import logging
 import os
 
 def set_logger():
+    """
+        This function will add logger
+        :param null
+        :return: file handler & stream handler instance
+    """
     logger = logging.getLogger(__name__)
 
     logger.setLevel(logging.INFO)
