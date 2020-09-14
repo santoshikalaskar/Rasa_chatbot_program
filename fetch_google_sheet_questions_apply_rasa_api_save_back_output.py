@@ -2,7 +2,6 @@ from datetime import date
 from datetime import timedelta
 import requests
 import json
-import logging
 import pandas as pd
 from google_sheet_handler import Google_sheet_handler
 import logger_hander
@@ -22,7 +21,6 @@ class Rasa_Test:
         list_of_records = google_sheet.get_all_records()
         Question_list = []
         Email_id_list = []
-        Name_list = []
         Intent_list = []
         Answer_list = []
         for records in list_of_records:
@@ -30,14 +28,12 @@ class Rasa_Test:
                 question = records.get('question')
                 email_id = records.get('email_id')
                 answer = records.get('answer')
-                name = records.get('name')
                 Question_list.append(question)
                 Email_id_list.append(email_id)
-                Name_list.append(name)
                 Answer_list.append(answer)
                 Intent_list.append("")
         logger.info("Data fetched from existing sheet Successfully..!")
-        return Question_list, Email_id_list, Name_list, Intent_list, Answer_list
+        return Question_list, Email_id_list, Intent_list, Answer_list
 
     def call_rasa_api(self,question_list):
         """
@@ -71,7 +67,39 @@ class Rasa_Test:
         return yesterday
 
     def check_cell_name_valid_or_not(self, sheet, List_cell_name):
+        """
+            This function will find cell name is right or wrong
+            :param sheet: google sheet instance, List_cell_name: list of cell name
+            :return: True or False
+        """
         return Google_sheet_handler.find_cell(self, sheet, List_cell_name)
+
+    def extract_data_and_return_dataframe_in_list(self, sheet):
+        """
+            This function will find existing sheet data pass to RASA API function return new dataframe in list
+            :param sheet: google sheet instance
+            :return: True or False
+        """
+        yesterday = self.find_yesterday_date()
+        List_of_cell_name = ['Date', 'question', 'email_id', 'answer', 'name']
+
+        # check cell name is valid or not
+        flag = self.check_cell_name_valid_or_not(sheet, List_of_cell_name)
+        if flag:
+            question_list, email_id, intent_list, answer_list = self.fetch_data(sheet, yesterday)
+            if len(question_list) != 0:
+                Response_list = self.call_rasa_api(question_list)
+
+                # if response got from rasa
+                if Response_list != "ConnectionError":
+                    dict = {'Date': yesterday, 'Email': email_id, 'Questions': question_list,
+                            'bot1_intent': intent_list,
+                            'bot1_answer': answer_list, 'bot2_intent': intent_list, 'bot2_answer': Response_list}
+                    Rasa_dataframe = pd.DataFrame(dict)
+                    df_list_value = Rasa_dataframe.values.tolist()
+                    return df_list_value
+            else:
+                logger.info("No interaction happened in yesterday.")
 
 if __name__ == "__main__":
 
@@ -83,30 +111,8 @@ if __name__ == "__main__":
     # get google sheet
     sheet = sheet_handler.call_sheet("Chatbot_Daily_Report","Chatbot_Daily_Report")
     if sheet != 'WorksheetNotFound':
-        yesterday = rasa_obj.find_yesterday_date()
-        List_of_cell_name = ['Date','question','email_id','answer','name']
-
-        # check cell name is valid or not
-        flag = rasa_obj.check_cell_name_valid_or_not(sheet,List_of_cell_name)
-        if flag:
-            question_list, email_id, Name, intent_list, answer_list = rasa_obj.fetch_data(sheet,yesterday)
-            if len(question_list) == 0:
-                logger.info("No interaction happened in yesterday.")
-            else:
-                Response_list = rasa_obj.call_rasa_api(question_list)
-
-                # if response got from rasa
-                if Response_list != "ConnectionError":
-                    dict = {'Date': yesterday, 'Email': email_id, 'Questions': question_list, 'bot1_intent': intent_list,
-                         'bot1_answer': answer_list, 'bot2_intent': intent_list, 'Rasa_output': Response_list}
-                    Rasa_dataframe = pd.DataFrame(dict)
-                    df_list_value = Rasa_dataframe.values.tolist()
-
-                    # get google sheet to store result
-                    created_sheet = sheet_handler.call_sheet("Chatbot_Daily_Report", "BL_BOT_Compare")
-                    if created_sheet != 'WorksheetNotFound':
-                        output = sheet_handler.save_output_into_sheet(created_sheet, df_list_value)
-                        if output == True:
-                            logger.info(" Sheet Updated Successfully...!!!")
-                        else:
-                            logger.error(" Something went wrong while Updating sheet ")
+        df_list_value = rasa_obj.extract_data_and_return_dataframe_in_list(sheet)
+        created_sheet = sheet_handler.call_sheet("Chatbot_Daily_Report", "BL_BOT_Compare")
+        if created_sheet != 'WorksheetNotFound':
+            output = sheet_handler.save_output_into_sheet(created_sheet, df_list_value)
+            logger.info(" Sheet Updated Successfully...!!!") if (output == True) else logger.error(" Something went wrong while Updating sheet ")
