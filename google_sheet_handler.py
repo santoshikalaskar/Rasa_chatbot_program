@@ -1,7 +1,6 @@
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import gspread_dataframe as gd
-import logging
 import logger_hander
 
 class Google_sheet_handler:
