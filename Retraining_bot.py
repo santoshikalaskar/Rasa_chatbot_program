@@ -53,7 +53,7 @@ class ReTrain_bot:
                 Bot2_Result_List.append(Bot2_Result)
 
         logger.info("Data fetched from existing sheet Successfully..!")
-        return Email_id_list, Question_list, Bot1_intent_list, bot2_intent_list, Actual_intent_must_be, Bot1_Result_List, Bot2_Result_List
+        return Email_id_list, Question_list, Bot1_intent_list, Bot2_intent_list, Actual_intent_must_be, Bot1_Result_List, Bot2_Result_List
 
     def find_yesterday_date(self):
         """
@@ -174,18 +174,18 @@ class ReTrain_bot:
         intent = le.inverse_transform(pred)
         return intent[0]
 
-    def call_retrian_model_predict_intent(self,retrain, Question_list):
+    def call_retrian_model_predict_intent(self, Question_list):
         """
         This function will take user input data & perform Prediction of intent
         :param retrain, Question_list: class object, user question list from google sheet
         :return: intent : return predicted intent list of question list
         """
-        model_file = retrain.load_model()
+        model_file = self.load_model()
         questions_list = Question_list
         intent_list = []
         for question in questions_list:
             df = pd.DataFrame([{'Question': question}])
-            intent = retrain.answer_Prediction(df, model_file)
+            intent = self.answer_Prediction(df, model_file)
             intent_list.append(intent)
         return intent_list
 
@@ -200,7 +200,6 @@ if __name__ == "__main__":
     # get google sheet
     sheet = sheet_handler.call_sheet("Chatbot_Daily_Report","BL_BOT_Compare")
 
-
     if sheet != 'WorksheetNotFound':
         yesterday = retrain_obj.find_yesterday_date()
         # yesterday = "Sep 21, 2020"
@@ -210,12 +209,11 @@ if __name__ == "__main__":
         # check cell name is valid or not
         flag = retrain_obj.check_cell_name_valid_or_not(sheet,List_of_cell_name)
         if flag:
-            Email_id_list, Question_list, Bot1_intent_list, bot2_intent_list, Actual_intent_must_be, Bot1_Result_List, Bot2_Result_List = retrain_obj.fetch_data(sheet,yesterday)
+            Email_id_list, Question_list, Bot1_intent_list, Bot2_intent_list, Actual_intent_must_be, Bot1_Result_List, Bot2_Result_List = retrain_obj.fetch_data(sheet,yesterday)
             if len(Question_list) == 0:
                 logger.info("No interaction happened in yesterday.")
             else:
-                Retain_bot1_intent_list = retrain_obj.call_retrian_model_predict_intent(retrain_obj, Question_list)
-
+                Retain_bot1_intent_list = retrain_obj.call_retrian_model_predict_intent( Question_list)
                 dict = {'Date': yesterday, 'Email': Email_id_list, 'Questions': Question_list, 'bot1_intent': Bot1_intent_list,
                      'bot2_intent': bot2_intent_list, 'Retain_bot1_intent': Retain_bot1_intent_list,'Actual_intent_must_be': Actual_intent_must_be, 'Bot1_Result_List': Bot1_Result_List, 'Bot2_Result_List': Bot2_Result_List }
                 dataframe = pd.DataFrame(dict)
