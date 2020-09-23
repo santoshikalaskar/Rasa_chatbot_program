@@ -215,7 +215,7 @@ if __name__ == "__main__":
             else:
                 Retain_bot1_intent_list = retrain_obj.call_retrian_model_predict_intent( Question_list)
                 dict = {'Date': yesterday, 'Email': Email_id_list, 'Questions': Question_list, 'bot1_intent': Bot1_intent_list,
-                     'bot2_intent': bot2_intent_list, 'Retain_bot1_intent': Retain_bot1_intent_list,'Actual_intent_must_be': Actual_intent_must_be, 'Bot1_Result_List': Bot1_Result_List, 'Bot2_Result_List': Bot2_Result_List }
+                     'bot2_intent': Bot2_intent_list, 'Retain_bot1_intent': Retain_bot1_intent_list,'Actual_intent_must_be': Actual_intent_must_be, 'Bot1_Result_List': Bot1_Result_List, 'Bot2_Result_List': Bot2_Result_List }
                 dataframe = pd.DataFrame(dict)
                 print(len(dataframe))
                 df_list_value = dataframe.values.tolist()
