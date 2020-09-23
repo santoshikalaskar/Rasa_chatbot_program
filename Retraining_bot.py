@@ -29,7 +29,7 @@ class ReTrain_bot:
         Question_list = []
         Email_id_list = []
         Bot1_intent_list = []
-        bot2_intent_list = []
+        Bot2_intent_list = []
         Actual_intent_must_be = []
         Bot1_Result_List = []
         Bot2_Result_List = []
@@ -47,7 +47,7 @@ class ReTrain_bot:
                 Question_list.append(question)
                 Email_id_list.append(email_id)
                 Bot1_intent_list.append(Bot1_intent)
-                bot2_intent_list.append(Bot2_intent)
+                Bot2_intent_list.append(Bot2_intent)
                 Actual_intent_must_be.append(Actual_intent)
                 Bot1_Result_List.append(Bot1_Result)
                 Bot2_Result_List.append(Bot2_Result)
@@ -158,7 +158,7 @@ class ReTrain_bot:
         model_file = [f for f in os.listdir(mypath) if (isfile(join(mypath, f)) and ("model" in f))][0]
         return model_file
 
-    def Answer_Prediction(self, data, model_file):
+    def answer_Prediction(self, data, model_file):
         """
         This function will Predict Answer Intent of test data
         :param data, model_file: Testing data & loaded model
@@ -185,7 +185,7 @@ class ReTrain_bot:
         intent_list = []
         for question in questions_list:
             df = pd.DataFrame([{'Question': question}])
-            intent = retrain.Answer_Prediction(df, model_file)
+            intent = retrain.answer_Prediction(df, model_file)
             intent_list.append(intent)
         return intent_list
 
